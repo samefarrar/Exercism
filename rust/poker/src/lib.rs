@@ -6,6 +6,7 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
     let mut hands: Vec<Hand> = hands.iter().map(|h| Hand::new(h)).collect();
     hands.sort_by(|a, b| b.partial_cmp(a).unwrap());
     let mut winners = Vec::new();
+    println!("{:?}", hands);
     if let Some(first_hand) = hands.first() {
         for hand in hands.iter() {
             if hand == first_hand {
@@ -121,6 +122,11 @@ impl<'a> Hand<'a> {
                 return (Category::Flush, ranks_array);
             }
         } else if is_straight(cards) {
+            if (ranks_array.first().unwrap() == &Rank::A)
+                & (ranks_array.last().unwrap() == &Rank::Number(2))
+            {
+                ranks_array.rotate_left(1)
+            }
             return (Category::Straight, ranks_array);
         } else if is_four_of_a_kind(cards) {
             return (Category::FourOfAKind, ranks_array);
@@ -141,15 +147,21 @@ impl<'a> Hand<'a> {
 fn is_straight(cards: &[Card; 5]) -> bool {
     let mut sorted_cards = cards.to_vec();
     sorted_cards.sort_by_key(|c| c.rank);
-    for window in sorted_cards.windows(2) {
-        if let [first_card, second_card] = window {
-            if first_card.suit != second_card.suit
-                || first_card.rank.value() != second_card.rank.value() + 1
-            {
-                return false;
+
+    // Suit logic is unnecessary here, as we are already testing for a flush above.
+    let mut rank_values: Vec<u8> = sorted_cards.iter().map(|r| r.rank.value()).collect();
+
+    if rank_values == vec![2, 3, 4, 5, 14] {
+        return true;
+    } else {
+        for window in rank_values.windows(2) {
+            if let [first_value, second_value] = window {
+                if first_value + 1 != *second_value {
+                    return false;
+                }
+            } else {
+                panic!("Invalid window length")
             }
-        } else {
-            panic!("Unexpected window length.")
         }
     }
     return true;
