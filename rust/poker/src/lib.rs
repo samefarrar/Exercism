@@ -77,7 +77,7 @@ impl Ord for Rank {
 struct Hand<'a> {
     cards: [Card; 5],
     category: Category,
-    rank: Rank,
+    ranks: [Rank; 5],
     hand_string: &'a str,
 }
 
@@ -86,38 +86,40 @@ impl<'a> Hand<'a> {
         let hand_string = cards;
         let cards: Vec<Card> = cards.split(" ").map(|s| Card::new(s)).collect();
         let cards_array: [Card; 5] = cards.try_into().unwrap();
-        let (category, rank) = Self::annotate_hand(&cards_array);
+        let (category, ranks) = Self::annotate_hand(&cards_array);
         Self {
             cards: cards_array,
             category,
-            rank,
+            ranks,
             hand_string,
         }
     }
 
-    fn annotate_hand(cards: &[Card; 5]) -> (Category, Rank) {
+    fn annotate_hand(cards: &[Card; 5]) -> (Category, [Rank; 5]) {
+        let mut ranks: Vec<Rank> = cards.iter().map(|c| c.rank).collect();
+        ranks.sort_by(|a, b| b.cmp(a));
+        let ranks_array: [Rank; 5] = ranks.try_into().unwrap();
         if is_five_of_a_kind(cards) {
-            return (Category::FiveOfAKind, Rank::A);
+            return (Category::FiveOfAKind, ranks_array);
         } else if is_straight_flush(cards) {
-            return (Category::StraightFlush, Rank::A);
+            return (Category::StraightFlush, ranks_array);
         } else if is_four_of_a_kind(cards) {
-            return (Category::FourOfAKind, Rank::A);
+            return (Category::FourOfAKind, ranks_array);
         } else if is_full_house(cards) {
-            return (Category::FullHouse, Rank::A);
+            return (Category::FullHouse, ranks_array);
         } else if is_flush(cards) {
-            return (Category::Flush, Rank::A);
+            return (Category::Flush, ranks_array);
         } else if is_straight(cards) {
-            return (Category::Straight, Rank::A);
+            return (Category::Straight, ranks_array);
         } else if is_three_of_a_kind(cards) {
-            return (Category::ThreeOfAKind, Rank::A);
+            return (Category::ThreeOfAKind, ranks_array);
         } else if is_two_pairs(cards) {
-            return (Category::TwoPairs, Rank::A);
+            return (Category::TwoPairs, ranks_array);
         } else if is_one_pair(cards) {
-            return (Category::OnePair, Rank::A);
+            return (Category::OnePair, ranks_array);
         } else {
-            let rank = cards.iter().max_by_key(|card| card.rank).unwrap().rank;
             let category = Category::HighCard;
-            return (category, rank);
+            return (category, ranks_array);
         }
     }
 }
@@ -206,14 +208,14 @@ fn is_one_pair(cards: &[Card; 5]) -> bool {
 
 impl<'a> PartialEq for Hand<'a> {
     fn eq(&self, other: &Self) -> bool {
-        self.category == other.category && self.rank == other.rank
+        self.category == other.category && self.ranks == other.ranks
     }
 }
 
 impl<'a> PartialOrd for Hand<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         if self.category == other.category {
-            self.rank.partial_cmp(&other.rank)
+            self.ranks.partial_cmp(&other.ranks)
         } else {
             self.category.partial_cmp(&other.category)
         }

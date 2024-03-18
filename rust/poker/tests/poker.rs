@@ -41,7 +41,6 @@ fn multiple_hands_with_the_same_high_cards_tie_compares_next_highest_ranked_down
 }
 
 #[test]
-#[ignore]
 fn winning_high_card_hand_also_has_the_lowest_card() {
     let input = &["2S 5H 6S 8D 7H", "3S 4D 6D 8C 7S"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();
@@ -50,7 +49,6 @@ fn winning_high_card_hand_also_has_the_lowest_card() {
 }
 
 #[test]
-#[ignore]
 fn one_pair_beats_high_card() {
     let input = &["4S 5H 6C 8D KH", "2S 4H 6S 4D JH"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();
