@@ -2,81 +2,220 @@
 ///
 /// Note the type signature: this function should return _the same_ reference to
 /// the winning hand(s) as were passed in, not reconstructed strings which happen to be equal.
-use std::collections::HashMap;
 pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
-    vec![hands[0]]
-}
-
-const CATEGORIES: &[&str] = &["Five of a Kind", "Straight Flush", "Four of a Kind", "Full House", "Flush",
-"Straight", "Three of a Kind", "Two Pair", "One Pair", "High card"];
-
-struct Hand<'a> {
-    cards: &'a str,
-    category: String,
-    rank: usize,
-}
-
-impl<'a> Hand<'a> {
-
-    fn new(cards: &'a str) -> Self {
-        let (category, rank) = Self::annotate_hand(&cards);
-        Self { cards, category, rank}
-    }
-
-    fn annotate_hand(cards: &'a str) -> (String, usize) {
-        // return the category of a card string (e.g. "3S 4S 5D 6H JH")
-        let mut rank_hash: HashMap<char, usize> = HashMap::new();
-        let mut suit_hash: HashMap<char, usize> = HashMap::new();
-        for card in cards.split_whitespace() {
-            let rank: char = card.chars().next().unwrap();
-            let suit: char = card.chars().last().unwrap();
-            *rank_hash.entry(rank).or_insert(0) += 1;
-            *suit_hash.entry(suit).or_insert(0) += 1;
-        }
-
-        // Check if straight flush:
-        if suit_hash.values().any(|&value| value == 5) {
-            let mut values: Vec<usize> = rank_hash.values().cloned().collect();
-            values.sort();
-            let is_continous = values.windows(2).all(|window| window[1] == window[0] + 1);
-            if is_continous {
-                let category = "Straight Flush";
-            } else if  {
-
+    let mut hands: Vec<Hand> = hands.iter().map(|h| Hand::new(h)).collect();
+    hands.sort_by(|a, b| b.partial_cmp(a).unwrap());
+    let mut winners = Vec::new();
+    if let Some(first_hand) = hands.first() {
+        for hand in hands.iter() {
+            if hand == first_hand {
+                winners.push(hand.hand_string)
+            } else {
+                break;
             }
         }
     }
+    winners
+}
 
-    fn is_category(cards: &'a Vec<&str>, category: &str) -> bool {
-        match category {
-            "Five of a Kind" => {
-                todo!("Check if all the cards have the same rank");
-                false
-            },
-            "Straight Flush" => {
-                todo!("Check if all the cards are sequential");
-                false
-            },
-            "Four of a Kind" => {
-                todo!("Check if all but 1 card have the same rank");
-                false
-            },
-            "Full House" => {
-                todo!("Check if the cards are 3 cards of one rank and 2 cards of another rank")
-            },
-            _ => false,
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone)]
+enum Category {
+    HighCard,
+    OnePair,
+    TwoPairs,
+    ThreeOfAKind,
+    Straight,
+    Flush,
+    FullHouse,
+    FourOfAKind,
+    StraightFlush,
+    FiveOfAKind,
+}
+
+use std::cmp::Ordering;
+
+#[derive(Debug, Eq, Clone, Copy)]
+enum Rank {
+    Number(u8),
+    J,
+    Q,
+    K,
+    A,
+}
+
+impl Rank {
+    fn value(&self) -> u8 {
+        match self {
+            Rank::Number(val) => *val,
+            Rank::J => 11,
+            Rank::Q => 12,
+            Rank::K => 13,
+            Rank::A => 14,
         }
     }
+}
+
+impl PartialEq for Rank {
+    fn eq(&self, other: &Self) -> bool {
+        self.value() == other.value()
+    }
+}
+
+impl PartialOrd for Rank {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.value().partial_cmp(&other.value())
+    }
+}
+
+impl Ord for Rank {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.value().cmp(&other.value())
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Hand<'a> {
+    cards: [Card; 5],
+    category: Category,
+    rank: Rank,
+    hand_string: &'a str,
+}
+
+impl<'a> Hand<'a> {
+    fn new(cards: &'a str) -> Self {
+        let hand_string = cards;
+        let cards: Vec<Card> = cards.split(" ").map(|s| Card::new(s)).collect();
+        let cards_array: [Card; 5] = cards.try_into().unwrap();
+        let (category, rank) = Self::annotate_hand(&cards_array);
+        Self {
+            cards: cards_array,
+            category,
+            rank,
+            hand_string,
+        }
+    }
+
+    fn annotate_hand(cards: &[Card; 5]) -> (Category, Rank) {
+        if is_five_of_a_kind(cards) {
+            return (Category::FiveOfAKind, Rank::A);
+        } else if is_straight_flush(cards) {
+            return (Category::StraightFlush, Rank::A);
+        } else if is_four_of_a_kind(cards) {
+            return (Category::FourOfAKind, Rank::A);
+        } else if is_full_house(cards) {
+            return (Category::FullHouse, Rank::A);
+        } else if is_flush(cards) {
+            return (Category::Flush, Rank::A);
+        } else if is_straight(cards) {
+            return (Category::Straight, Rank::A);
+        } else if is_three_of_a_kind(cards) {
+            return (Category::ThreeOfAKind, Rank::A);
+        } else if is_two_pairs(cards) {
+            return (Category::TwoPairs, Rank::A);
+        } else if is_one_pair(cards) {
+            return (Category::OnePair, Rank::A);
+        } else {
+            let rank = cards.iter().max_by_key(|card| card.rank).unwrap().rank;
+            let category = Category::HighCard;
+            return (category, rank);
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Card {
+    suit: char,
+    rank: Rank,
+}
+
+impl Card {
+    fn new(card: &str) -> Self {
+        let rank = match &card[0..card.len() - 1] {
+            "2" => Rank::Number(2),
+            "3" => Rank::Number(3),
+            "4" => Rank::Number(4),
+            "5" => Rank::Number(5),
+            "6" => Rank::Number(6),
+            "7" => Rank::Number(7),
+            "8" => Rank::Number(8),
+            "9" => Rank::Number(9),
+            "10" => Rank::Number(10),
+            "J" => Rank::J,
+            "Q" => Rank::Q,
+            "K" => Rank::K,
+            "A" => Rank::A,
+            &_ => panic!("Invalid card rank"),
+        };
+        let suit = card.chars().last().unwrap();
+        Self { rank, suit }
+    }
+}
+
+fn is_five_of_a_kind(cards: &[Card; 5]) -> bool {
+    return false;
+}
+
+fn is_straight_flush(cards: &[Card; 5]) -> bool {
+    let first_card_suit = cards.first().unwrap().suit;
+    if !cards.iter().all(|c| c.suit == first_card_suit) {
+        return false;
+    }
+    let mut sorted_cards = cards.to_vec();
+    sorted_cards.sort_by_key(|c| c.rank);
+    for window in sorted_cards.windows(2) {
+        if let [first_card, second_card] = window {
+            if first_card.suit != second_card.suit
+                || first_card.rank.value() != second_card.rank.value() + 1
+            {
+                return false;
+            }
+        } else {
+            panic!("Unexpected window length.")
+        }
+    }
+    return true;
+}
+
+fn is_four_of_a_kind(cards: &[Card; 5]) -> bool {
+    false
+}
+
+fn is_full_house(cards: &[Card; 5]) -> bool {
+    false
+}
+
+fn is_flush(cards: &[Card; 5]) -> bool {
+    false
+}
+
+fn is_straight(cards: &[Card; 5]) -> bool {
+    false
+}
+
+fn is_three_of_a_kind(cards: &[Card; 5]) -> bool {
+    false
+}
+
+fn is_two_pairs(cards: &[Card; 5]) -> bool {
+    false
+}
+
+fn is_one_pair(cards: &[Card; 5]) -> bool {
+    false
 }
 
 impl<'a> PartialEq for Hand<'a> {
     fn eq(&self, other: &Self) -> bool {
-        todo!("If hand and rank are equal, equal should return True, else False");
+        self.category == other.category && self.rank == other.rank
     }
 }
 
 impl<'a> PartialOrd for Hand<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        todo!("Hand with greater hand is greater, if equal hand, hand with greater rank")
+        if self.category == other.category {
+            self.rank.partial_cmp(&other.rank)
+        } else {
+            self.category.partial_cmp(&other.category)
+        }
     }
 }

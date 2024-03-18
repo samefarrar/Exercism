@@ -10,7 +10,6 @@ fn single_hand_always_wins() {
 }
 
 #[test]
-#[ignore]
 fn highest_card_out_of_all_hands_wins() {
     let input = &["4D 5S 6S 8D 3C", "2S 4C 7S 9H 10H", "3S 4S 5D 6H JH"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();
@@ -19,7 +18,6 @@ fn highest_card_out_of_all_hands_wins() {
 }
 
 #[test]
-#[ignore]
 fn a_tie_has_multiple_winners() {
     let input = &[
         "4D 5S 6S 8D 3C",
@@ -35,7 +33,6 @@ fn a_tie_has_multiple_winners() {
 }
 
 #[test]
-#[ignore]
 fn multiple_hands_with_the_same_high_cards_tie_compares_next_highest_ranked_down_to_last_card() {
     let input = &["3S 5H 6S 8D 7H", "2S 5D 6D 8C 7S"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();
