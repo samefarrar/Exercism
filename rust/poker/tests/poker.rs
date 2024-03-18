@@ -57,7 +57,6 @@ fn one_pair_beats_high_card() {
 }
 
 #[test]
-#[ignore]
 fn highest_pair_wins() {
     let input = &["4S 2H 6S 2D JH", "2S 4H 6C 4D JD"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();
@@ -66,7 +65,6 @@ fn highest_pair_wins() {
 }
 
 #[test]
-#[ignore]
 fn both_hands_have_the_same_pair_high_card_wins() {
     let input = &["4H 4S AH JC 3D", "4C 4D AS 5D 6C"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();
@@ -75,7 +73,6 @@ fn both_hands_have_the_same_pair_high_card_wins() {
 }
 
 #[test]
-#[ignore]
 fn two_pairs_beats_one_pair() {
     let input = &["2S 8H 6S 8D JH", "4S 5H 4C 8C 5C"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();
@@ -84,7 +81,6 @@ fn two_pairs_beats_one_pair() {
 }
 
 #[test]
-#[ignore]
 fn both_hands_have_two_pairs_highest_ranked_pair_wins() {
     let input = &["2S 8H 2D 8D 3H", "4S 5H 4C 8S 5D"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();
@@ -93,7 +89,6 @@ fn both_hands_have_two_pairs_highest_ranked_pair_wins() {
 }
 
 #[test]
-#[ignore]
 fn both_hands_have_two_pairs_with_the_same_highest_ranked_pair_tie_goes_to_low_pair() {
     let input = &["2S QS 2C QD JH", "JD QH JS 8D QC"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();
@@ -102,7 +97,6 @@ fn both_hands_have_two_pairs_with_the_same_highest_ranked_pair_tie_goes_to_low_p
 }
 
 #[test]
-#[ignore]
 fn both_hands_have_two_identically_ranked_pairs_tie_goes_to_remaining_card_kicker() {
     let input = &["JD QH JS 8D QC", "JS QS JC 2D QD"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();
@@ -111,7 +105,6 @@ fn both_hands_have_two_identically_ranked_pairs_tie_goes_to_remaining_card_kicke
 }
 
 #[test]
-#[ignore]
 fn both_hands_have_two_pairs_that_add_to_the_same_value_win_goes_to_highest_pair() {
     let input = &["6S 6H 3S 3H AS", "7H 7S 2H 2S AC"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();
@@ -120,7 +113,6 @@ fn both_hands_have_two_pairs_that_add_to_the_same_value_win_goes_to_highest_pair
 }
 
 #[test]
-#[ignore]
 fn two_pairs_first_ranked_by_largest_pair() {
     let input = &["5C 2S 5S 4H 4C", "6S 2S 6H 7C 2C"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();
@@ -129,7 +121,6 @@ fn two_pairs_first_ranked_by_largest_pair() {
 }
 
 #[test]
-#[ignore]
 fn three_of_a_kind_beats_two_pair() {
     let input = &["2S 8H 2H 8D JH", "4S 5H 4C 8S 4H"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();
@@ -138,7 +129,6 @@ fn three_of_a_kind_beats_two_pair() {
 }
 
 #[test]
-#[ignore]
 fn both_hands_have_three_of_a_kind_tie_goes_to_highest_ranked_triplet() {
     let input = &["2S 2H 2C 8D JH", "4S AH AS 8C AD"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();
@@ -147,7 +137,6 @@ fn both_hands_have_three_of_a_kind_tie_goes_to_highest_ranked_triplet() {
 }
 
 #[test]
-#[ignore]
 fn with_multiple_decks_two_players_can_have_same_three_of_a_kind_ties_go_to_highest_remaining_cards(
 ) {
     let input = &["5S AH AS 7C AD", "4S AH AS 8C AD"];
@@ -157,7 +146,6 @@ fn with_multiple_decks_two_players_can_have_same_three_of_a_kind_ties_go_to_high
 }
 
 #[test]
-#[ignore]
 fn a_straight_beats_three_of_a_kind() {
     let input = &["4S 5H 4C 8D 4H", "3S 4D 2S 6D 5C"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();
@@ -166,7 +154,6 @@ fn a_straight_beats_three_of_a_kind() {
 }
 
 #[test]
-#[ignore]
 fn aces_can_end_a_straight_10_j_q_k_a() {
     let input = &["4S 5H 4C 8D 4H", "10D JH QS KD AC"];
     let output = winning_hands(input).into_iter().collect::<HashSet<_>>();

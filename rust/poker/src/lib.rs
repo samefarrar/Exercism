@@ -32,9 +32,9 @@ enum Category {
     FiveOfAKind,
 }
 
-use std::cmp::Ordering;
+use std::{cmp::Ordering, collections::HashMap};
 
-#[derive(Debug, Eq, Clone, Copy)]
+#[derive(Debug, Eq, Clone, Copy, Hash)]
 enum Rank {
     Number(u8),
     J,
@@ -96,21 +96,36 @@ impl<'a> Hand<'a> {
     }
 
     fn annotate_hand(cards: &[Card; 5]) -> (Category, [Rank; 5]) {
-        let mut ranks: Vec<Rank> = cards.iter().map(|c| c.rank).collect();
-        ranks.sort_by(|a, b| b.cmp(a));
-        let ranks_array: [Rank; 5] = ranks.try_into().unwrap();
-        if is_five_of_a_kind(cards) {
-            return (Category::FiveOfAKind, ranks_array);
-        } else if is_straight_flush(cards) {
-            return (Category::StraightFlush, ranks_array);
+        let sorted_ranks = sorted_rank_counts(cards);
+
+        let mut ranks_array: [Rank; 5] = [
+            Rank::A,
+            Rank::Number(2),
+            Rank::Number(3),
+            Rank::Number(4),
+            Rank::Number(5),
+        ];
+
+        let mut position = 0;
+        for (rank, count) in sorted_ranks {
+            for _ in 0..count {
+                ranks_array[position] = rank;
+                position += 1;
+            }
+        }
+
+        if is_flush(cards) {
+            if is_straight(cards) {
+                return (Category::StraightFlush, ranks_array);
+            } else {
+                return (Category::Flush, ranks_array);
+            }
+        } else if is_straight(cards) {
+            return (Category::Straight, ranks_array);
         } else if is_four_of_a_kind(cards) {
             return (Category::FourOfAKind, ranks_array);
         } else if is_full_house(cards) {
             return (Category::FullHouse, ranks_array);
-        } else if is_flush(cards) {
-            return (Category::Flush, ranks_array);
-        } else if is_straight(cards) {
-            return (Category::Straight, ranks_array);
         } else if is_three_of_a_kind(cards) {
             return (Category::ThreeOfAKind, ranks_array);
         } else if is_two_pairs(cards) {
@@ -118,10 +133,76 @@ impl<'a> Hand<'a> {
         } else if is_one_pair(cards) {
             return (Category::OnePair, ranks_array);
         } else {
-            let category = Category::HighCard;
-            return (category, ranks_array);
+            return (Category::HighCard, ranks_array);
         }
     }
+}
+
+fn is_straight(cards: &[Card; 5]) -> bool {
+    let mut sorted_cards = cards.to_vec();
+    sorted_cards.sort_by_key(|c| c.rank);
+    for window in sorted_cards.windows(2) {
+        if let [first_card, second_card] = window {
+            if first_card.suit != second_card.suit
+                || first_card.rank.value() != second_card.rank.value() + 1
+            {
+                return false;
+            }
+        } else {
+            panic!("Unexpected window length.")
+        }
+    }
+    return true;
+}
+
+fn is_four_of_a_kind(cards: &[Card; 5]) -> bool {
+    is_y_entities_of_x_collection(cards, 1, 4)
+}
+
+fn is_full_house(cards: &[Card; 5]) -> bool {
+    is_y_entities_of_x_collection(cards, 1, 3) & is_y_entities_of_x_collection(cards, 1, 2)
+}
+
+fn is_flush(cards: &[Card; 5]) -> bool {
+    let first_card_suit = cards.first().unwrap().suit;
+    if !cards.iter().all(|c| c.suit == first_card_suit) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+fn is_three_of_a_kind(cards: &[Card; 5]) -> bool {
+    is_y_entities_of_x_collection(cards, 1, 3)
+}
+
+fn is_two_pairs(cards: &[Card; 5]) -> bool {
+    is_y_entities_of_x_collection(cards, 2, 2)
+}
+
+fn is_one_pair(cards: &[Card; 5]) -> bool {
+    is_y_entities_of_x_collection(cards, 1, 2)
+}
+
+fn sorted_rank_counts(cards: &[Card; 5]) -> Vec<(Rank, usize)> {
+    let rank_counts = card_rank_counts(cards);
+    let mut rank_count_pairs: Vec<(Rank, usize)> = rank_counts.into_iter().collect();
+
+    rank_count_pairs.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| b.0.cmp(&a.0)));
+    return rank_count_pairs;
+}
+
+fn is_y_entities_of_x_collection(cards: &[Card; 5], y: usize, x: usize) -> bool {
+    let rank_counts = card_rank_counts(cards);
+    rank_counts.values().filter(|&&count| count == x).count() == y
+}
+
+fn card_rank_counts(cards: &[Card; 5]) -> HashMap<Rank, usize> {
+    let mut rank_counts: HashMap<Rank, usize> = HashMap::new();
+    for card in cards {
+        *rank_counts.entry(card.rank).or_insert(0) += 1;
+    }
+    rank_counts
 }
 
 #[derive(Debug, Clone)]
@@ -151,59 +232,6 @@ impl Card {
         let suit = card.chars().last().unwrap();
         Self { rank, suit }
     }
-}
-
-fn is_five_of_a_kind(cards: &[Card; 5]) -> bool {
-    return false;
-}
-
-fn is_straight_flush(cards: &[Card; 5]) -> bool {
-    let first_card_suit = cards.first().unwrap().suit;
-    if !cards.iter().all(|c| c.suit == first_card_suit) {
-        return false;
-    }
-    let mut sorted_cards = cards.to_vec();
-    sorted_cards.sort_by_key(|c| c.rank);
-    for window in sorted_cards.windows(2) {
-        if let [first_card, second_card] = window {
-            if first_card.suit != second_card.suit
-                || first_card.rank.value() != second_card.rank.value() + 1
-            {
-                return false;
-            }
-        } else {
-            panic!("Unexpected window length.")
-        }
-    }
-    return true;
-}
-
-fn is_four_of_a_kind(cards: &[Card; 5]) -> bool {
-    false
-}
-
-fn is_full_house(cards: &[Card; 5]) -> bool {
-    false
-}
-
-fn is_flush(cards: &[Card; 5]) -> bool {
-    false
-}
-
-fn is_straight(cards: &[Card; 5]) -> bool {
-    false
-}
-
-fn is_three_of_a_kind(cards: &[Card; 5]) -> bool {
-    false
-}
-
-fn is_two_pairs(cards: &[Card; 5]) -> bool {
-    false
-}
-
-fn is_one_pair(cards: &[Card; 5]) -> bool {
-    false
 }
 
 impl<'a> PartialEq for Hand<'a> {
