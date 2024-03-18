@@ -115,19 +115,19 @@ impl<'a> Hand<'a> {
             }
         }
 
-        if is_flush(cards) {
-            if is_straight(cards) {
-                return (Category::StraightFlush, ranks_array);
-            } else {
-                return (Category::Flush, ranks_array);
-            }
-        } else if is_straight(cards) {
+        if is_straight(cards) {
             if (ranks_array.first().unwrap() == &Rank::A)
                 & (ranks_array.last().unwrap() == &Rank::Number(2))
             {
                 ranks_array.rotate_left(1)
             }
-            return (Category::Straight, ranks_array);
+            if is_flush(cards) {
+                return (Category::StraightFlush, ranks_array);
+            } else {
+                return (Category::Straight, ranks_array);
+            }
+        } else if is_flush(cards) {
+            return (Category::Flush, ranks_array);
         } else if is_four_of_a_kind(cards) {
             return (Category::FourOfAKind, ranks_array);
         } else if is_full_house(cards) {
