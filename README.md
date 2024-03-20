@@ -14,7 +14,7 @@ The repository is organized as follows:
 ```
 .
 ├── README.md
-└── exercises
+└── rust
     ├── exercise1
     │   ├── Cargo.toml
     │   └── src
